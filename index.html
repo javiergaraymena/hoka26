@@ -460,6 +460,12 @@ footer{padding:28px 36px;border-top:1px solid rgba(200,232,23,.06);display:flex;
       <div class="team-url-hint">Comparte esta URL con tu equipo. El token va encriptado en el hash — no se transmite a ningún servidor.</div>
     </div>
 
+    <div id="refreshTokenBox" style="display:none;background:rgba(200,232,23,.06);border:1px solid rgba(200,232,23,.25);padding:14px;border-radius:1px;display:none;flex-direction:column;gap:8px;">
+      <div style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:rgba(200,232,23,.6);">Refresh Token — copia y guarda en Netlify</div>
+      <div id="refreshTokenVal" style="font-family:'Supply',monospace;font-size:10px;color:var(--lime);word-break:break-all;line-height:1.5;"></div>
+      <button onclick="copyRefreshToken()" style="align-self:flex-start;font-family:'Supply',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;background:rgba(200,232,23,.15);color:var(--lime);border:1px solid rgba(200,232,23,.3);padding:7px 14px;cursor:pointer;border-radius:1px;">COPIAR TOKEN</button>
+      <div style="font-size:9px;color:rgba(200,232,23,.3);line-height:1.6;">Agrega este valor en Netlify → Environment variables → DROPBOX_REFRESH_TOKEN</div>
+    </div>
     <div class="a-note"><strong>OAuth:</strong> Login directo con tu cuenta Dropbox — el token no expira. <strong>Token manual:</strong> expira en 4 horas.</div>
   </div>
 </div>
@@ -638,7 +644,15 @@ async function handleOAuthCallback(code){
     if(!data.access_token)throw new Error(JSON.stringify(data));
     sessionStorage.removeItem('pkce_verifier');
     history.replaceState(null,'',pageBase);
+    // Store refresh token globally and show in admin
+    window._currentRefreshToken = data.refresh_token || '';
     await activateWithToken(data.access_token);
+    // Show refresh token in admin panel
+    if(data.refresh_token){
+      const rt=document.getElementById('refreshTokenBox');
+      const rv=document.getElementById('refreshTokenVal');
+      if(rt&&rv){rv.textContent=data.refresh_token;rt.style.display='block';}
+    }
   }catch(e){
     $('secLoading').style.display='none';
     $('secHero').style.display='flex';
@@ -934,6 +948,16 @@ async function shareInstagram(){
   }
 }
 function closeShare(){$('swrap').classList.remove('open');}
+function copyRefreshToken(){
+  const val=document.getElementById('refreshTokenVal').textContent;
+  navigator.clipboard.writeText(val).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=val;document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');document.body.removeChild(ta);
+  });
+  const btn=event.target;
+  btn.textContent='¡COPIADO!';setTimeout(()=>btn.textContent='COPIAR TOKEN',2000);
+}
 function copyShareUrl(){$('scopyInp').select();document.execCommand('copy');const b=document.querySelector('.scopy-btn');b.textContent='¡COPIADO!';setTimeout(()=>b.textContent='COPIAR',2000);}
 
 boot();
