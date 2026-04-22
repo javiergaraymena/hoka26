@@ -635,7 +635,7 @@ async function handleOAuthCallback(code){
       body:JSON.stringify({code, code_verifier:verifier, redirect_uri:REDIRECT})
     });
     const data=await res.json();
-    if(!data.access_token)throw new Error(data.error||'OAuth failed');
+    if(!data.access_token)throw new Error(JSON.stringify(data));
     sessionStorage.removeItem('pkce_verifier');
     history.replaceState(null,'',pageBase);
     await activateWithToken(data.access_token);
