@@ -560,9 +560,13 @@ async function decryptToken(b64){
 
 /* ══ PKCE HELPERS ══ */
 async function generatePKCE(){
-  const verifier=btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))).replace(/[+/=]/g,'').slice(0,43);
+  // Generate 96 random bytes, encode to base64url — gives 128 char verifier
+  const array=crypto.getRandomValues(new Uint8Array(96));
+  const verifier=btoa(String.fromCharCode(...array))
+    .replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
   const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier));
-  const challenge=btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+  const challenge=btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
   return {verifier,challenge};
 }
 
